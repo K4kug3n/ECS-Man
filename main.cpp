@@ -125,7 +125,6 @@ namespace ecs
 		stage._celerities.push_back(celerity_component{ celerity{0, 0}, id });
 		stage._types.push_back(type_component{ type::mob, id });
 		stage._sprites.push_back(sprite_component{ sprite{ texture }, id });
-		stage._animations.push_back(animation_component{animation{direction::right, 2, 0}, id});
 
 		return id;
 	}
@@ -140,6 +139,11 @@ namespace ecs
 		stage._sprites.push_back(sprite_component{ sprite{ texture }, id });
 
 		return id;
+	}
+
+	void add_animation(stage & stage, id target, direction dir, int state)
+	{
+		stage._animations.push_back(animation_component{ animation{ dir, state, 0 }, target });
 	}
 
 	void remove_entity(stage & stage, id id)
@@ -323,6 +327,7 @@ struct texture_pack
 {
 	sf::Texture pacman;
 	sf::Texture point;
+	sf::Texture ghost;
 };
 
 sf::Texture load_texture(std::string file_path)
@@ -362,21 +367,26 @@ int main()
 {
 	ecs::stage level_1{ map{ std::string{ "level1.txt" }, std::string{ "TileSet.png" } } };
 
-	texture_pack textures{ load_texture("packman-sprite.png"), load_texture("point.png") };
+	texture_pack textures{ load_texture("packman-sprite.png"), load_texture("point.png"), load_texture("ghost-sprite.png") };
 
-	ecs::add_point(level_1, ecs::position{ 48, 48 }, ecs::size{48, 48}, textures.point);
-	ecs::add_point(level_1, ecs::position{ 48, 96 }, ecs::size{48, 48}, textures.point);
+	/*for (float y{ 1 }; y <= 18; y++)
+	{
+		for (float x{ 1 }; x <= 18; x++)
+		{
+			ecs::add_point(level_1, ecs::position{ 48 * x, 48 * y}, ecs::size{ 48, 48 }, textures.point);
+		}
+	}*/
 
 	auto player = ecs::add_mob(level_1, ecs::position{ 144, 96 }, ecs::size{ 29, 29 }, textures.pacman);
-	int i{ 0 };
+	ecs::add_animation(level_1, player, ecs::direction::right, 2);
+
+	ecs::add_mob(level_1, ecs::position{ 48, 48 }, ecs::size{ 27, 29 }, textures.ghost);
 
 	sf::RenderWindow window(sf::VideoMode{640 , 480, 32 }, "PacMan");
 	window.setFramerateLimit(60);
 	 
-	while (window.isOpen()) //Boucle evenement
+	while (window.isOpen())
 	{
-		i++;
-
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -385,9 +395,8 @@ int main()
 			}
 		}
 
-		auto player_p{get_component(level_1._positions, 3)};
-
 		keyboard_input(level_1, player);
+
 		ecs::update_positions(level_1);
 		ecs::update_collisions(level_1, player);
 
