@@ -5,13 +5,15 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "game_structures.h"
+
 class map
 {
 public:
-	map(std::string file_path ,std::string tileset_path);
+	map(map_infos const& infos, std::string const& tileset_path);
 
-	void load_tileset(std::string tileset_path);
-	void load_map(std::string file_path);
+	void load_tileset(std::string const& tileset_path);
+	void load_map_infos(map_infos const& infos);
 	void create_map();
 	void draw_map(sf::RenderWindow & render_window);
 
@@ -20,16 +22,12 @@ public:
 	~map();
 
 private: 
-
-	void load_id_map(std::ifstream & file);
-	void load_collider_map(std::ifstream & file);
-
 	sf::Texture tileset;
 	sf::VertexArray vertex_map;
 
 	std::vector<size_t> id_map;
-	std::vector<size_t> collider_map;
-	size_t nb_y_tile;
-	size_t nb_x_tile;
-	size_t tile_size;
+	std::vector<bool> collider_map;
+	int nb_y_tile;
+	int nb_x_tile;
+	int tile_size;
 };

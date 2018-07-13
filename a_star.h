@@ -2,32 +2,42 @@
 
 #include <vector>
 #include <string>
+#include <functional>
+#include <array>
 
-struct spot
+#include "game_structures.h"
+
+struct index
 {
 	int x;
 	int y;
-	float f;
-	float h;
-	float g;
+};
+
+struct spot
+{
+	index index;
+	int f;
+	int h;
+	int g;
 	bool wall;
-	std::vector<spot> neighbors;
-	spot * parent = nullptr;
+
+	int parent{ -1 };
 };
 
 class a_star
 {
 public:
-	a_star(std::string const& file_path);
+	a_star(map_infos const& infos);
 
-	void load_map(std::string const& file_path);
+	void load_map_infos(map_infos const& infos);
 	void create_spots();
-	void create_path(spot & begin, spot & end);
+	std::vector<position> create_path(float x_1, float y_1, float x_2, float y_2);
 
 	~a_star();
 
 private:
-	void add_neighbors();
+	index get_corresponding_index(float x, float y);
+	std::vector<position> extract_path(std::vector<spot> & close_set);
 
 	int nb_y_tile;
 	int nb_x_tile;

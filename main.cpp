@@ -5,23 +5,32 @@
 #include <cassert>
 
 #include "map.h"
+#include "a_star.h"
+#include "loader.h"
 
 namespace ecs
 {
 	using id = size_t;
 	using entities = std::vector<id>;
 
-	struct position
-	{
-		float x;
-		float y;
-	};
 	struct position_component
 	{
 		position position_data;
 		id id_data;
 	};
 	using positions = std::vector<position_component>;
+	struct size
+	{
+		int width;
+		int height;
+	};
+	struct size_component
+	{
+		size size_data;
+		id id_data;
+	};
+	using sizes = std::vector<size_component>;
+
 
 	using celerity = position;
 	struct celerity_component
@@ -31,6 +40,7 @@ namespace ecs
 	};
 	using celerities = std::vector<celerity_component>;
 
+
 	enum class type { mob, point };
 	struct type_component
 	{
@@ -38,6 +48,7 @@ namespace ecs
 		id id_data;
 	};
 	using types = std::vector<type_component>;
+
 
 	using sprite = sf::Sprite;
 	struct sprite_component
@@ -47,10 +58,11 @@ namespace ecs
 	};
 	using sprites = std::vector<sprite_component>;
 
-	enum class direction {right, bottom, left, top};
+
+	enum class Direction {right, bottom, left, top};
 	struct animation
 	{
-		direction dir;
+		Direction dir;
 		int step;
 		size_t time_spended;
 	};
@@ -61,17 +73,17 @@ namespace ecs
 	};
 	using animations = std::vector<animation_component>;
 
- 	struct size
- 	{
-  		int width;
-		int height;
- 	};
- 	struct size_component
- 	{
-		size size_data;
+	enum class Behavior { aggressive };
+	struct ai
+	{
+		Behavior behavior;
+	};
+	struct ai_component
+	{
+		ai ai_data;
 		id id_data;
- 	};
- 	using sizes = std::vector<size_component>;
+	};
+	using ais = std::vector<ai_component>;
 
 	struct stage
 	{
@@ -83,9 +95,10 @@ namespace ecs
 		types _types;
 		sprites _sprites;
 		animations _animations;
+		ais _ais;
 	};
 
-	bool check_collision(position & b1_p, size & b1_s, position & b2_p, size & b2_s)
+	bool check_collision(position const& b1_p, size const& b1_s, position const& b2_p, size const& b2_s)
 	{
 		if (b1_p.x < b2_p.x + b2_s.width &&
 			b1_p.x + b1_s.width > b2_p.x &&
@@ -95,13 +108,13 @@ namespace ecs
 		else { return false; }
 	}
 
-	int dir_to_int(direction & dir)
+	int dir_to_int(Direction const& dir)
 	{
 		return static_cast<int>(dir);
 	}
 
 	template <typename Collection>
-	typename Collection::value_type & get_component(Collection & collection, id id)
+	typename Collection::value_type & get_component(Collection & collection, id const& id)
 	{
 		auto it = std::find_if(begin(collection), end(collection),
 			[id](auto p) {return(p.id_data == id); });
@@ -111,12 +124,12 @@ namespace ecs
 		return (*it);
 	}
 
-	id create_entity(stage & stage)
+	id create_entity(stage const& stage)
 	{
 		return stage._entities.empty() ? 1 : stage._entities.size() + 1;;
 	}
 
-	id add_mob(stage & stage, position const& pos, size const& s, sf::Texture & texture)
+	id add_mob(stage & stage, position const& pos, size const& s, sf::Texture const& texture)
 	{
 		const auto id{ create_entity(stage) };
 		stage._entities.push_back(id);
@@ -129,7 +142,7 @@ namespace ecs
 		return id;
 	}
 
-	id add_point(stage & stage, position const& position, size const& s, sf::Texture & texture)
+	id add_point(stage & stage, position const& position, size const& s, sf::Texture const& texture)
 	{
 		const auto id{ create_entity(stage) };
 		stage._entities.push_back(id);
@@ -141,12 +154,17 @@ namespace ecs
 		return id;
 	}
 
-	void add_animation(stage & stage, id target, direction dir, int state)
+	void add_animation(stage & stage, id const& target, Direction const& dir, int state)
 	{
 		stage._animations.push_back(animation_component{ animation{ dir, state, 0 }, target });
 	}
 
-	void remove_entity(stage & stage, id id)
+	void add_ai(stage & stage, id const& target, Behavior const& behavior)
+	{
+		stage._ais.push_back(ai_component{ ai{ behavior }, target });
+	}
+
+	void remove_entity(stage & stage, id const& id)
 	{
 		const auto entities_it{ std::remove(stage._entities.begin(), stage._entities.end(), id) };
 		stage._entities.erase(entities_it, stage._entities.end());
@@ -174,6 +192,10 @@ namespace ecs
 		const auto animations_it{std::remove_if(stage._animations.begin(), stage._animations.end(),
 			[id](auto p) {return (p.id_data == id); }) };
 		stage._animations.erase(animations_it, stage._animations.end());
+
+		const auto ai_it{ std::remove_if(stage._ais.begin(), stage._ais.end(),
+			[id](auto p) {return (p.id_data == id); }) };
+		stage._ais.erase(ai_it, stage._ais.end());
 	}
 
 	void remove_entities(stage & stage, std::vector<id> & entity_to_remove)
@@ -186,7 +208,7 @@ namespace ecs
 		entity_to_remove.clear();
 	}
 
-	void entities_interaction(stage & stage, id entity_1, id entity_2, std::vector<id> & entity_to_remove)
+	void entities_interaction(stage & stage, id const& entity_1, id const& entity_2, std::vector<id> & entity_to_remove)
 	{
 		auto entity_1_t{ get_component(stage._types, entity_1) };
 		auto entity_2_t{ get_component(stage._types, entity_2) };
@@ -197,14 +219,14 @@ namespace ecs
 		}
 	}
 
-	void add_celerity(stage & stage, id id, celerity const& new_celerity)
+	void add_celerity(stage & stage, id const& id, celerity const& new_celerity)
 	{
 		auto & celerity_component{ get_component(stage._celerities, id) };
 
 		celerity_component.celerity_data = new_celerity;
 	}
 
-	void set_direction(stage & stage, id target, direction const& dir)
+	void set_direction(stage & stage, id const& target, Direction const& dir)
 	{
 		auto & animation_component{ get_component(stage._animations, target) };
 
@@ -232,7 +254,7 @@ namespace ecs
 		}
 	}
 
-	void update_collisions(stage & stage, id target)
+	void update_collisions(stage & stage, id const& target)
 	{
 		auto target_p{ get_component(stage._positions, target) };
 		auto target_s{ get_component(stage._sizes, target) };
@@ -255,6 +277,27 @@ namespace ecs
 
 		remove_entities(stage, entity_to_remove);
 
+	}
+
+	void update_ai(stage & stage, ai_component const& target, a_star & path_finding, id const& player)
+	{
+		if (target.ai_data.behavior == Behavior::aggressive)
+		{
+			position target_position{ get_component(stage._positions, target.id_data).position_data };
+			position player_position{ get_component(stage._positions, player).position_data };
+
+			std::vector<position> pos_path{ path_finding.create_path(target_position.x, target_position.y, player_position.x, player_position.y) };
+
+			//TODO
+		}
+	}
+
+	void update_ais(stage & stage, a_star & path_finding, id const& player)
+	{
+		for (auto & entity : stage._ais)
+		{
+			update_ai(stage, entity, path_finding, player);
+		}
 	}
 
 	void update_animations(stage & stage)
@@ -300,7 +343,7 @@ namespace ecs
 		}
 	}
 
-	void update_view(sf::RenderWindow & window, stage & stage, id player)
+	void update_view(sf::RenderWindow & window, stage & stage, id const& player)
 	{
 		auto player_position{ get_component(stage._positions, player) };
 		auto player_size{ get_component(stage._sizes, player) };
@@ -339,48 +382,54 @@ sf::Texture load_texture(std::string file_path)
 
 void keyboard_input(ecs::stage & stage, ecs::id target)
 {
-	float speed{ 2.0f };
+	float speed{ 3.0f };
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 	{
 		ecs::add_celerity(stage, target, ecs::celerity{ 0, -speed });
-		ecs::set_direction(stage, target, ecs::direction::top );
+		ecs::set_direction(stage, target, ecs::Direction::top );
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 	{
 		ecs::add_celerity(stage, target, ecs::celerity{ 0, speed });
-		ecs::set_direction(stage, target, ecs::direction::bottom );
+		ecs::set_direction(stage, target, ecs::Direction::bottom );
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 	{
 		ecs::add_celerity(stage, target, ecs::celerity{ -speed, 0 });
-		ecs::set_direction(stage, target, ecs::direction::left );
+		ecs::set_direction(stage, target, ecs::Direction::left );
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		ecs::add_celerity(stage, target, ecs::celerity{ speed, 0 });
-		ecs::set_direction(stage, target, ecs::direction::right );
+		ecs::set_direction(stage, target, ecs::Direction::right );
 	}
 }
 
 int main()
 {
-	ecs::stage level_1{ map{ std::string{ "level1.txt" }, std::string{ "TileSet.png" } } };
+	loader loader{};
+
+	loader.load("level1.xml");
+	
+	map_infos map_infos{ loader.get_map_info() };
+
+	ecs::stage level_1{ map{ map_infos, std::string{ "TileSet.png" } }};
 
 	texture_pack textures{ load_texture("packman-sprite.png"), load_texture("point.png"), load_texture("ghost-sprite.png") };
 
-	/*for (float y{ 1 }; y <= 18; y++)
+	std::vector<position> points_positions{ loader.get_points_positions() };
+	for (auto const& position : points_positions)
 	{
-		for (float x{ 1 }; x <= 18; x++)
-		{
-			ecs::add_point(level_1, ecs::position{ 48 * x, 48 * y}, ecs::size{ 48, 48 }, textures.point);
-		}
-	}*/
+		ecs::add_point(level_1, position, ecs::size{ 48, 48 }, textures.point);
+	}
 
-	auto player = ecs::add_mob(level_1, ecs::position{ 144, 96 }, ecs::size{ 29, 29 }, textures.pacman);
-	ecs::add_animation(level_1, player, ecs::direction::right, 2);
+	a_star a_star{ map_infos };
 
-	ecs::add_mob(level_1, ecs::position{ 48, 48 }, ecs::size{ 27, 29 }, textures.ghost);
+	auto player = ecs::add_mob(level_1, position{ 144, 96 }, ecs::size{ 29, 29 }, textures.pacman);
+	ecs::add_animation(level_1, player, ecs::Direction::right, 2);
+
+	ecs::add_mob(level_1, position{ 48, 72 }, ecs::size{ 27, 29 }, textures.ghost);
 
 	sf::RenderWindow window(sf::VideoMode{640 , 480, 32 }, "PacMan");
 	window.setFramerateLimit(60);

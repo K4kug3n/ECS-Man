@@ -5,51 +5,28 @@
 #include <cmath>
 
 
-map::map(std::string file_path, std::string tileset_path)
+map::map(map_infos const& infos, std::string const& tileset_path)
 {
-	load_map(file_path);
+	load_map_infos(infos);
 	load_tileset(tileset_path);
 
 	create_map();
 }
 
-void map::load_tileset(std::string tileset_path)
+void map::load_tileset(std::string const& tileset_path)
 {
 	tileset.loadFromFile(tileset_path);
 }
 
-void map::load_map(std::string file_path)
+void map::load_map_infos(map_infos const& infos)
 {
-	std::ifstream file{ file_path };
+	nb_x_tile = infos.nb_x_tile;
+	nb_y_tile = infos.nb_y_tile;
+	tile_size = infos.tile_size;
 
-	file >> nb_x_tile;
-	file >> nb_y_tile;
-	file >> tile_size;
 
-	load_id_map(file);
-	load_collider_map(file);
-
-	file.close();
-}
-
-void map::load_id_map(std::ifstream & file)
-{
-	for (size_t i{ 0 }; i < nb_x_tile * nb_y_tile; i++) 
-	{
-		unsigned temp;
-		file >> temp;
-		id_map.push_back(temp);
-	}
-}
-
-void map::load_collider_map(std::ifstream & file)
-{
-	for (size_t i{ 0 }; i < nb_x_tile * nb_y_tile; i++)
-	{
-		bool temp;
-		file >> temp;
-		collider_map.push_back(temp);
-	}
+	collider_map = infos.collider_map;
+	id_map = infos.id_map;
 }
 
 void map::create_map()
@@ -57,8 +34,8 @@ void map::create_map()
 	vertex_map.setPrimitiveType(sf::Quads);
 	vertex_map.resize(nb_x_tile * nb_y_tile * 4);
 
-	for (size_t y(0); y < nb_y_tile; y++) {
-		for (size_t x(0); x < nb_x_tile; x++) {
+	for (int y(0); y < nb_y_tile; y++) {
+		for (int x(0); x < nb_x_tile; x++) {
 
 			size_t actualTile = id_map[nb_x_tile * y + x] - 1;
 
@@ -98,9 +75,6 @@ bool map::check_collision(float x, float y, int w, int h)
 	float tile2{ y1_map * nb_x_tile + x2_map };
 	float tile3{ y2_map * nb_x_tile + x1_map };
 	float tile4{ y2_map * nb_x_tile + x2_map };
-
-	//std::cout << "tile 1 : " << tile1 << std::endl;
-	//std::cout << "tile 2 : " << tile2 << std::endl;
 
 	if (collider_map[tile1]) { return true; } 
 	if (collider_map[tile2]) { return true; }
