@@ -36,18 +36,18 @@ size_t count,
 const char *format [,
 argument] ...
 );*/
-static inline int TIXML_SNPRINTF(char* buffer, size_t size, const char* format, ...)
+static inline int TIXML_SNPRINTF(char* buffer, size_t Size, const char* format, ...)
 {
 	va_list va;
 	va_start(va, format);
-	int result = vsnprintf_s(buffer, size, _TRUNCATE, format, va);
+	int result = vsnprintf_s(buffer, Size, _TRUNCATE, format, va);
 	va_end(va);
 	return result;
 }
 
-static inline int TIXML_VSNPRINTF(char* buffer, size_t size, const char* format, va_list va)
+static inline int TIXML_VSNPRINTF(char* buffer, size_t Size, const char* format, va_list va)
 {
-	int result = vsnprintf_s(buffer, size, _TRUNCATE, format, va);
+	int result = vsnprintf_s(buffer, Size, _TRUNCATE, format, va);
 	return result;
 }
 
@@ -2222,16 +2222,16 @@ namespace tinyxml2
 			return _errorID;
 		}
 
-		const size_t size = filelength;
+		const size_t Size = filelength;
 		TIXMLASSERT(_charBuffer == 0);
-		_charBuffer = new char[size + 1];
-		size_t read = fread(_charBuffer, 1, size, fp);
-		if (read != size) {
+		_charBuffer = new char[Size + 1];
+		size_t read = fread(_charBuffer, 1, Size, fp);
+		if (read != Size) {
 			SetError(XML_ERROR_FILE_READ_ERROR, 0, 0);
 			return _errorID;
 		}
 
-		_charBuffer[size] = 0;
+		_charBuffer[Size] = 0;
 
 		Parse();
 		return _errorID;
@@ -2443,15 +2443,15 @@ namespace tinyxml2
 	}
 
 
-	void XMLPrinter::Write(const char* data, size_t size)
+	void XMLPrinter::Write(const char* data, size_t Size)
 	{
 		if (_fp) {
-			fwrite(data, sizeof(char), size, _fp);
+			fwrite(data, sizeof(char), Size, _fp);
 		}
 		else {
-			char* p = _buffer.PushArr(static_cast<int>(size)) - 1;   // back up over the null terminator.
-			memcpy(p, data, size);
-			p[size] = 0;
+			char* p = _buffer.PushArr(static_cast<int>(Size)) - 1;   // back up over the null terminator.
+			memcpy(p, data, Size);
+			p[Size] = 0;
 		}
 	}
 

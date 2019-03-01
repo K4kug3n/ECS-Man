@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-#include <exception>
+#include <stdexcept>
 
 #include "tinyxml2.h"
 #include "game_structures.h"
@@ -27,13 +27,18 @@ public:
 	loader();
 
 	bool load(std::string const& file_path);
-	map_infos get_map_info();
-	std::vector<position> get_points_positions();
+	Map_infos get_map_infos();
+	Mob_infos get_player_infos();
+	Textures_infos get_textures_infos();
+	std::vector<Mob_infos> get_ennemies_infos();
+	Points_infos get_points_infos();
 
 	~loader();
 
 private:
-	void extract_map(map_infos & infos, tinyxml2::XMLNode * map_node);
+	void extract_map(Map_infos & infos, tinyxml2::XMLNode * map_node);
+	Mob_infos extract_ennemie_infos(tinyxml2::XMLElement * ennemie_element);
+	Animation_infos extract_animation_infos(tinyxml2::XMLElement * animation_element);
 
 	tinyxml2::XMLDocument m_doc;
 };

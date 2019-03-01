@@ -37,15 +37,6 @@ distribution.
 #endif
 #include <stdint.h>
 
-/*
-TODO: intern strings instead of allocation.
-*/
-/*
-gcc:
-g++ -Wall -DTINYXML2_DEBUG tinyxml2.cpp xmltest.cpp -o gccxmltest.exe
-Formatting, Artistic Style:
-AStyle.exe --style=1tbs --indent-switches --break-closing-brackets --indent-preprocessor tinyxml2.cpp tinyxml2.h
-*/
 
 #if defined( _DEBUG ) || defined (__DEBUG__)
 #   ifndef TINYXML2_DEBUG
@@ -200,7 +191,7 @@ namespace tinyxml2
 		DynArray() :
 			_mem(_pool),
 			_allocated(INITIAL_SIZE),
-			_size(0)
+			size(0)
 		{
 		}
 
@@ -211,58 +202,58 @@ namespace tinyxml2
 		}
 
 		void Clear() {
-			_size = 0;
+			size = 0;
 		}
 
 		void Push(T t) {
-			TIXMLASSERT(_size < INT_MAX);
-			EnsureCapacity(_size + 1);
-			_mem[_size] = t;
-			++_size;
+			TIXMLASSERT(size < INT_MAX);
+			EnsureCapacity(size + 1);
+			_mem[size] = t;
+			++size;
 		}
 
 		T* PushArr(int count) {
 			TIXMLASSERT(count >= 0);
-			TIXMLASSERT(_size <= INT_MAX - count);
-			EnsureCapacity(_size + count);
-			T* ret = &_mem[_size];
-			_size += count;
+			TIXMLASSERT(size <= INT_MAX - count);
+			EnsureCapacity(size + count);
+			T* ret = &_mem[size];
+			size += count;
 			return ret;
 		}
 
 		T Pop() {
-			TIXMLASSERT(_size > 0);
-			--_size;
-			return _mem[_size];
+			TIXMLASSERT(size > 0);
+			--size;
+			return _mem[size];
 		}
 
 		void PopArr(int count) {
-			TIXMLASSERT(_size >= count);
-			_size -= count;
+			TIXMLASSERT(size >= count);
+			size -= count;
 		}
 
 		bool Empty() const {
-			return _size == 0;
+			return size == 0;
 		}
 
 		T& operator[](int i) {
-			TIXMLASSERT(i >= 0 && i < _size);
+			TIXMLASSERT(i >= 0 && i < size);
 			return _mem[i];
 		}
 
 		const T& operator[](int i) const {
-			TIXMLASSERT(i >= 0 && i < _size);
+			TIXMLASSERT(i >= 0 && i < size);
 			return _mem[i];
 		}
 
 		const T& PeekTop() const {
-			TIXMLASSERT(_size > 0);
-			return _mem[_size - 1];
+			TIXMLASSERT(size > 0);
+			return _mem[size - 1];
 		}
 
 		int Size() const {
-			TIXMLASSERT(_size >= 0);
-			return _size;
+			TIXMLASSERT(size >= 0);
+			return size;
 		}
 
 		int Capacity() const {
@@ -271,10 +262,10 @@ namespace tinyxml2
 		}
 
 		void SwapRemove(int i) {
-			TIXMLASSERT(i >= 0 && i < _size);
-			TIXMLASSERT(_size > 0);
-			_mem[i] = _mem[_size - 1];
-			--_size;
+			TIXMLASSERT(i >= 0 && i < size);
+			TIXMLASSERT(size > 0);
+			_mem[i] = _mem[size - 1];
+			--size;
 		}
 
 		const T* Mem() const {
@@ -297,8 +288,8 @@ namespace tinyxml2
 				TIXMLASSERT(cap <= INT_MAX / 2);
 				int newAllocated = cap * 2;
 				T* newMem = new T[newAllocated];
-				TIXMLASSERT(newAllocated >= _size);
-				memcpy(newMem, _mem, sizeof(T)*_size);	// warning: not using constructors, only works for PODs
+				TIXMLASSERT(newAllocated >= size);
+				memcpy(newMem, _mem, sizeof(T)*size);	// warning: not using constructors, only works for PODs
 				if (_mem != _pool) {
 					delete[] _mem;
 				}
@@ -310,7 +301,7 @@ namespace tinyxml2
 		T*  _mem;
 		T   _pool[INITIAL_SIZE];
 		int _allocated;		// objects allocated
-		int _size;			// number objects in use
+		int size;			// number objects in use
 	};
 
 
@@ -403,7 +394,7 @@ namespace tinyxml2
 			_root = item;
 		}
 		void Trace(const char* name) {
-			printf("Mempool %s watermark=%d [%dk] current=%d size=%d nAlloc=%d blocks=%d\n",
+			printf("Mempool %s watermark=%d [%dk] current=%d Size=%d nAlloc=%d blocks=%d\n",
 				name, _maxAllocs, _maxAllocs * ITEM_SIZE / 1024, _currentAllocs,
 				ITEM_SIZE, _nAllocs, _blockPtrs.Size());
 		}
@@ -2166,8 +2157,8 @@ namespace tinyxml2
 			return _buffer.Mem();
 		}
 		/**
-		If in print to memory mode, return the size
-		of the XML file in memory. (Note the size returned
+		If in print to memory mode, return the Size
+		of the XML file in memory. (Note the Size returned
 		includes the terminating null.)
 		*/
 		int CStrSize() const {
@@ -2191,7 +2182,7 @@ namespace tinyxml2
 		*/
 		virtual void PrintSpace(int depth);
 		void Print(const char* format, ...);
-		void Write(const char* data, size_t size);
+		void Write(const char* data, size_t Size);
 		inline void Write(const char* data) { Write(data, strlen(data)); }
 		void Putc(char ch);
 
