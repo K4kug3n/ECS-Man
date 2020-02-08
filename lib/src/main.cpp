@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 
 #include "map.h"
 #include "a_star.h"
@@ -73,8 +74,8 @@ namespace ecs
 		Direction dir;
 		int step;
 		int max_step;
-		int interval_time;
-		size_t time_spended = 0;
+		long long interval_time;
+		long long time_spended = 0;
 	};
 	struct Animation_component
 	{
@@ -278,14 +279,14 @@ namespace ecs
 
 	}
 
-	void update_positions(Stage & stage)
+	void update_positions(Stage & stage, long long delta_t)
 	{
 		for (auto & celerity : stage._celerities)
 		{
 			auto & physic_component{ get_component(stage._physics, celerity.id_data) };
 
-			float next_x_position{ physic_component.physic_data.position_data.x + celerity.celerity_data.x };
-			float next_y_position{ physic_component.physic_data.position_data.y + celerity.celerity_data.y };
+			float next_x_position{ physic_component.physic_data.position_data.x + celerity.celerity_data.x * delta_t };
+			float next_y_position{ physic_component.physic_data.position_data.y + celerity.celerity_data.y * delta_t };
 
 			if (!stage._map.check_collision(next_x_position, next_y_position, physic_component.physic_data.size_data.width, physic_component.physic_data.size_data.height))
 			{
@@ -390,13 +391,13 @@ namespace ecs
 		}
 	}
 
-	void update_animations_step(Stage & stage)
+	void update_animations_step(Stage & stage, long long delta_t)
 	{
 		for (auto & animation_component : stage._animations)
 		{
-			animation_component.animation_data.time_spended++;
+			animation_component.animation_data.time_spended += delta_t;
 
-			if (animation_component.animation_data.time_spended == animation_component.animation_data.interval_time)
+			if (animation_component.animation_data.time_spended >= animation_component.animation_data.interval_time)
 			{
 				animation_component.animation_data.step++;
 				if (animation_component.animation_data.step > animation_component.animation_data.max_step) 
@@ -451,12 +452,12 @@ namespace ecs
 		window.setView(sf::View{ sf::FloatRect{ center_x, center_y,  screen_width, screen_height } });
 	}
 
-	void udpate_systems(Stage & stage, Id const& player, A_star & a_star, sf::RenderWindow & window){
+	void udpate_systems(Stage & stage, Id const& player, A_star & a_star, sf::RenderWindow & window, long long  delta_t){
 		ecs::update_ais(stage, a_star, player);
-		ecs::update_positions(stage);
+		ecs::update_positions(stage, delta_t);
 		ecs::update_collisions(stage, player);
 
-		ecs::update_animations_step(stage);
+		ecs::update_animations_step(stage, delta_t);
 		ecs::update_animations(stage);
 
 		ecs::update_sprites_position(stage);
@@ -600,7 +601,9 @@ int main()
 	add_points( loader.get_points_infos(), textures, level_1 );
 
 	sf::RenderWindow window(sf::VideoMode{ 900 , 675, 32 }, "PacMan");
-	window.setFramerateLimit(60);
+	//window.setFramerateLimit(60);
+
+	auto start{ std::chrono::system_clock::now() };
 
 	while (window.isOpen())
 	{
@@ -614,7 +617,9 @@ int main()
  
 		keyboard_input(level_1, player);
 
-		ecs::udpate_systems(level_1, player, a_star, window);
+		auto current_time{ std::chrono::system_clock::now() };
+		auto delta_t{ std::chrono::duration_cast<std::chrono::milliseconds>(current_time.time_since_epoch()).count() - std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count() };
+		ecs::udpate_systems(level_1, player, a_star, window, delta_t);
 
 		window.clear();
 
@@ -622,6 +627,8 @@ int main()
 		ecs::display_entities(level_1, window);
 
 		window.display();
+
+		start = current_time;
 	}
 
 	return 0;
