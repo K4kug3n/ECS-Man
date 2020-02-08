@@ -451,6 +451,18 @@ namespace ecs
 		window.setView(sf::View{ sf::FloatRect{ center_x, center_y,  screen_width, screen_height } });
 	}
 
+	void udpate_systems(Stage & stage, Id const& player, A_star & a_star, sf::RenderWindow & window){
+		ecs::update_ais(stage, a_star, player);
+		ecs::update_positions(stage);
+		ecs::update_collisions(stage, player);
+
+		ecs::update_animations_step(stage);
+		ecs::update_animations(stage);
+
+		ecs::update_sprites_position(stage);
+		ecs::update_view(window, stage, player);
+	}
+
 	void display_entities(Stage & stage, sf::RenderWindow & window)
 	{
 		for (auto & entity : stage._sprites)
@@ -587,7 +599,7 @@ int main()
 	add_ennemies(loader.get_ennemies_infos(), textures, level_1);
 	add_points( loader.get_points_infos(), textures, level_1 );
 
-	sf::RenderWindow window(sf::VideoMode{900 , 675, 32 }, "PacMan");
+	sf::RenderWindow window(sf::VideoMode{ 900 , 675, 32 }, "PacMan");
 	window.setFramerateLimit(60);
 
 	while (window.isOpen())
@@ -602,15 +614,7 @@ int main()
  
 		keyboard_input(level_1, player);
 
-		ecs::update_ais(level_1, a_star, player);
-		ecs::update_positions(level_1);
-		ecs::update_collisions(level_1, player);
-
-		ecs::update_animations_step(level_1);
-		ecs::update_animations(level_1);
-
-		ecs::update_sprites_position(level_1);
-		ecs::update_view(window, level_1, player);
+		ecs::udpate_systems(level_1, player, a_star, window);
 
 		window.clear();
 
