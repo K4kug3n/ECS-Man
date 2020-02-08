@@ -262,7 +262,7 @@ namespace ecs
 		}
 	}
 
-	std::vector<Position> choose_path(a_star & path_finding, Position const& pos_target, Size const& size_target, Position const& final_pos)
+	std::vector<Position> choose_path(A_star & path_finding, Position const& pos_target, Size const& size_target, Position const& final_pos)
 	{
 		std::vector<Position> path_1{ path_finding.create_center_path(pos_target.x, pos_target.y, final_pos.x, final_pos.y) };
 		std::vector<Position> path_2{ path_finding.create_center_path(pos_target.x + size_target.width, pos_target.y + size_target.height, final_pos.x, final_pos.y) };
@@ -321,7 +321,7 @@ namespace ecs
 
 	}
 
-	void update_ai(Stage & stage, Ai_component const& target, a_star & path_finding, Id const& player)
+	void update_ai(Stage & stage, Ai_component const& target, A_star & path_finding, Id const& player)
 	{
 		if (target.ai_data.behavior == Behavior::aggressive)
 		{
@@ -366,7 +366,7 @@ namespace ecs
 		}
 	}
 
-	void update_ais(Stage & stage, a_star & path_finding, Id const& player)
+	void update_ais(Stage & stage, A_star & path_finding, Id const& player)
 	{
 		for (auto & entity : stage._ais)
 		{
@@ -579,7 +579,7 @@ int main()
 	}
 
 	ecs::Stage level_1{ Map{ map_infos }};
-	a_star a_star{ map_infos };
+	A_star a_star{ map_infos };
 
 	texture_pack textures{ create_texture_pack( loader.get_textures_infos() ) };
 
