@@ -21,10 +21,10 @@ public:
 	}
 };
 
-class loader
+class Loader
 {
 public:
-	loader();
+	Loader();
 
 	bool load(std::string const& file_path);
 	Map_infos get_map_infos();
@@ -33,7 +33,7 @@ public:
 	std::vector<Mob_infos> get_ennemies_infos();
 	Points_infos get_points_infos();
 
-	~loader();
+	~Loader();
 
 private:
 	void extract_map(Map_infos & infos, tinyxml2::XMLNode * map_node);

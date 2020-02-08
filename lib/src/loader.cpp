@@ -126,16 +126,16 @@ std::string extract_path(tinyxml2::XMLElement * parent_element)
 }
 
 
-loader::loader()
+Loader::Loader()
 {
 }
 
-bool loader::load(std::string const& file_path)
+bool Loader::load(std::string const& file_path)
 {
 	return xml_successfull( m_doc.LoadFile(file_path.c_str()) );
 }
 
-void loader::extract_map(Map_infos & infos, tinyxml2::XMLNode * map_node)
+void Loader::extract_map(Map_infos & infos, tinyxml2::XMLNode * map_node)
 {
 	tinyxml2::XMLNode *collider_node{ first_child_element(map_node, "Collider") };
 
@@ -147,7 +147,7 @@ void loader::extract_map(Map_infos & infos, tinyxml2::XMLNode * map_node)
 }
 
 
-Map_infos loader::get_map_infos()
+Map_infos Loader::get_map_infos()
 {
 	Map_infos infos;
 
@@ -178,7 +178,7 @@ Map_infos loader::get_map_infos()
 	return infos;
 }
 
-Mob_infos loader::get_player_infos()
+Mob_infos Loader::get_player_infos()
 {
 	tinyxml2::XMLNode *player_node{ get_node(m_doc, "Player") };
 
@@ -199,7 +199,7 @@ Mob_infos loader::get_player_infos()
 						anim_infos };
 }
 
-Textures_infos loader::get_textures_infos()
+Textures_infos Loader::get_textures_infos()
 {	
 	tinyxml2::XMLNode *textures_node{ get_node(m_doc, "Textures") };
 	
@@ -223,7 +223,7 @@ Textures_infos loader::get_textures_infos()
 	return infos;
 }
 
-Mob_infos loader::extract_ennemie_infos(tinyxml2::XMLElement * ennemie_element)
+Mob_infos Loader::extract_ennemie_infos(tinyxml2::XMLElement * ennemie_element)
 {
 	tinyxml2::XMLElement *position_element{ first_child_element(ennemie_element, "Position") };
 	tinyxml2::XMLElement *size_element{ first_child_element(ennemie_element, "Size") };
@@ -242,7 +242,7 @@ Mob_infos loader::extract_ennemie_infos(tinyxml2::XMLElement * ennemie_element)
 						anim_infos };
 }
 
-Animation_infos loader::extract_animation_infos(tinyxml2::XMLElement * animation_element)
+Animation_infos Loader::extract_animation_infos(tinyxml2::XMLElement * animation_element)
 {
 	Animation_infos infos;
 
@@ -266,7 +266,7 @@ Animation_infos loader::extract_animation_infos(tinyxml2::XMLElement * animation
 	return infos;
 }
 
-std::vector<Mob_infos> loader::get_ennemies_infos()
+std::vector<Mob_infos> Loader::get_ennemies_infos()
 {
 	tinyxml2::XMLNode * ennemies_node( get_node(m_doc, "Ennemies") );
 
@@ -282,7 +282,7 @@ std::vector<Mob_infos> loader::get_ennemies_infos()
 	return infos;
 }
 
-Points_infos loader::get_points_infos()
+Points_infos Loader::get_points_infos()
 {
 	tinyxml2::XMLNode *points_node{ get_node(m_doc, "Points") };
 
@@ -302,6 +302,6 @@ Points_infos loader::get_points_infos()
 	return infos;
 }
 
-loader::~loader()
+Loader::~Loader()
 {
 }

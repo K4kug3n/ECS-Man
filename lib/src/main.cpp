@@ -467,16 +467,16 @@ sf::Texture load_texture(std::string file_path)
 	return texture;
 }
 
-struct texture_pack
+struct Texture_pack
 {
 	sf::Texture _player;
 	std::vector<sf::Texture> _ennemies;
 	sf::Texture _point;
 };
 
-texture_pack create_texture_pack(Textures_infos const& infos)
+Texture_pack create_texture_pack(Textures_infos const& infos)
 {
-	texture_pack textures;
+	Texture_pack textures;
 
 	textures._player = load_texture(infos.sprite_player_path);
 	textures._point = load_texture(infos.text_point_path);
@@ -516,7 +516,7 @@ void keyboard_input(ecs::Stage & stage, ecs::Id target)
 
 }
 
-ecs::Id add_player(Mob_infos const& infos, texture_pack const& textures, ecs::Stage & level)
+ecs::Id add_player(Mob_infos const& infos, Texture_pack const& textures, ecs::Stage & level)
 {
 	auto id{ ecs::add_mob(level, ecs::Physic{ infos.position, infos.size }, infos.speed, textures._player) };
 	
@@ -546,7 +546,7 @@ void add_ennemie(Mob_infos const& infos, sf::Texture const& texture, ecs::Stage 
 
 }
 
-void add_ennemies(std::vector<Mob_infos> const& infos, texture_pack const& textures, ecs::Stage & level)
+void add_ennemies(std::vector<Mob_infos> const& infos, Texture_pack const& textures, ecs::Stage & level)
 {
 	for (size_t i{ 0 }; i < infos.size(); i++)
 	{
@@ -554,7 +554,7 @@ void add_ennemies(std::vector<Mob_infos> const& infos, texture_pack const& textu
 	}
 }
 
-void add_points(Points_infos const& infos, texture_pack const& textures, ecs::Stage & level)
+void add_points(Points_infos const& infos, Texture_pack const& textures, ecs::Stage & level)
 {
 	for (auto const& Position : infos.points_positions)
 	{
@@ -564,7 +564,7 @@ void add_points(Points_infos const& infos, texture_pack const& textures, ecs::St
 
 int main()
 {
-	loader loader{};
+	Loader loader{};
 	loader.load("level_1.xml");
 
 	Map_infos map_infos;
@@ -581,7 +581,7 @@ int main()
 	ecs::Stage level_1{ Map{ map_infos }};
 	A_star a_star{ map_infos };
 
-	texture_pack textures{ create_texture_pack( loader.get_textures_infos() ) };
+	Texture_pack textures{ create_texture_pack( loader.get_textures_infos() ) };
 
 	auto player = add_player(loader.get_player_infos(), textures, level_1);
 	add_ennemies(loader.get_ennemies_infos(), textures, level_1);
